@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Ads Performance Dashboard - May vs April 2025</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: #0f0f23;
+            color: #e1e1e1;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        .dashboard-header {
+            background: linear-gradient(135deg, #1a1a3e 0%, #0f0f23 100%);
+            padding: 2rem;
+            text-align: center;
+            border-bottom: 2px solid #3d3d5c;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .dashboard-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(88, 101, 242, 0.1) 0%, transparent 70%);
+            animation: pulse 15s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.3; }
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #5865f2 0%, #7289da 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .date-range {
+            color: #a8a8b8;
+            margin-top: 0.5rem;
+            font-size: 1.1rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        
+        .metric-card {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid #2d2d4a;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #5865f2, #7289da);
+            transform: translateX(-100%);
+            transition: transform 0.5s ease;
+        }
+        
+        .metric-card:hover::before {
+            transform: translateX(0);
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(88, 101, 242, 0.2);
+            border-color: #5865f2;
+        }
+        
+        .metric-label {
+            color: #a8a8b8;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+        
+        .metric-change {
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .positive {
+            color: #3ba55d;
+        }
+        
+        .negative {
+            color: #ed4245;
+        }
+        
+        .chart-section {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid #2d2d4a;
+        }
+        
+        .chart-title {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-bottom: 2rem;
+        }
+        
+        .campaign-table {
+            width: 100%;
+            background: #1a1a2e;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #2d2d4a;
+        }
+        
+        .campaign-table th {
+            background: #252540;
+            color: #a8a8b8;
+            font-weight: 600;
+            text-align: left;
+            padding: 1rem;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .campaign-table td {
+            padding: 1rem;
+            border-top: 1px solid #2d2d4a;
+            color: #e1e1e1;
+        }
+        
+        .campaign-table tr:hover {
+            background: #252540;
+        }
+        
+        .campaign-name {
+            font-weight: 600;
+            color: #ffffff;
+        }
+        
+        .performance-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .badge-excellent {
+            background: rgba(59, 165, 93, 0.2);
+            color: #3ba55d;
+        }
+        
+        .badge-warning {
+            background: rgba(250, 166, 26, 0.2);
+            color: #faa61a;
+        }
+        
+        .badge-critical {
+            background: rgba(237, 66, 69, 0.2);
+            color: #ed4245;
+        }
+        
+        .arrow {
+            font-size: 1.2rem;
+        }
+        
+        .filter-section {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            padding: 0.75rem 1.5rem;
+            background: #252540;
+            border: 1px solid #3d3d5c;
+            border-radius: 8px;
+            color: #e1e1e1;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+        
+        .filter-btn:hover {
+            background: #5865f2;
+            border-color: #5865f2;
+            transform: translateY(-1px);
+        }
+        
+        .filter-btn.active {
+            background: #5865f2;
+            border-color: #5865f2;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-container {
+                padding: 1rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .chart-container {
+                height: 300px;
+            }
+            
+            .campaign-table {
+                font-size: 0.9rem;
+            }
+            
+            .campaign-table th,
+            .campaign-table td {
+                padding: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-header">
+        <h1>Google Ads Performance Dashboard</h1>
+        <p class="date-range">May 2025 vs April 2025 Comparison</p>
+    </div>
+
+    <div class="dashboard-container">
+        <!-- Key Metrics -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-label">Total Spend</div>
+                <div class="metric-value">$19,992.91</div>
+                <div class="metric-change negative">
+                    <span class="arrow">↓</span>
+                    <span>$685.12 (-3.31%)</span>
+                </div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-label">Total Conversions</div>
+                <div class="metric-value">143.86</div>
+                <div class="metric-change negative">
+                    <span class="arrow">↓</span>
+                    <span>101.28 (-41.31%)</span>
+                </div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-label">Cost Per Conversion</div>
+                <div class="metric-value">$138.97</div>
+                <div class="metric-change negative">
+                    <span class="arrow">↑</span>
+                    <span>$54.62 (+64.75%)</span>
+                </div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-label">Conversion Rate</div>
+                <div class="metric-value">3.94%</div>
+                <div class="metric-change negative">
+                    <span class="arrow">↓</span>
+                    <span>0.72pp (-15.45%)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Buttons -->
+        <div class="filter-section">
+            <button class="filter-btn active" onclick="filterCampaigns('all')">All Campaigns</button>
+            <button class="filter-btn" onclick="filterCampaigns('search')">Search Only</button>
+            <button class="filter-btn" onclick="filterCampaigns('pmax')">Performance Max Only</button>
+            <button class="filter-btn" onclick="filterCampaigns('houston')">Houston</button>
+            <button class="filter-btn" onclick="filterCampaigns('austin')">Austin</button>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="chart-section">
+            <h2 class="chart-title">Campaign Performance by Location</h2>
+            <div class="chart-container">
+                <canvas id="locationChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-section">
+            <h2 class="chart-title">Conversion Trends</h2>
+            <div class="chart-container">
+                <canvas id="conversionChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Campaign Details Table -->
+        <div class="chart-section">
+            <h2 class="chart-title">Campaign Details</h2>
+            <table class="campaign-table" id="campaignTable">
+                <thead>
+                    <tr>
+                        <th>Campaign</th>
+                        <th>Budget</th>
+                        <th>Cost</th>
+                        <th>Conversions</th>
+                        <th>Conv. Rate</th>
+                        <th>Cost/Conv</th>
+                        <th>Performance</th>
+                    </tr>
+                </thead>
+                <tbody id="campaignTableBody">
+                    <!-- Table rows will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Campaign data
+        const campaignData = [
+            {
+                name: "HOU | CityCentre | Search | Max Clicks",
+                location: "Houston",
+                type: "Search",
+                budget: 50,
+                cost: 1739.53,
+                conversions: 7,
+                convRate: 4.02,
+                costPerConv: 248.57,
+                changeConversions: 129.36
+            },
+            {
+                name: "ATX | Bee Caves | Search | Conversions",
+                location: "Austin",
+                type: "Search",
+                budget: 25,
+                cost: 755.36,
+                conversions: 2,
+                convRate: 2.67,
+                costPerConv: 377.68,
+                changeConversions: -80
+            },
+            {
+                name: "ATX | Four Points | Leads | Performance Max",
+                location: "Austin",
+                type: "Performance Max",
+                budget: 100,
+                cost: 2982.27,
+                conversions: 18,
+                convRate: 3.23,
+                costPerConv: 165.68,
+                changeConversions: -57.14
+            },
+            {
+                name: "ATX | Bee Caves | Leads | Performance Max",
+                location: "Austin",
+                type: "Performance Max",
+                budget: 80,
+                cost: 2405.56,
+                conversions: 10,
+                convRate: 2.03,
+                costPerConv: 240.56,
+                changeConversions: -74.36
+            },
+            {
+                name: "HOU | CityCentre | P-Max",
+                location: "Houston",
+                type: "Performance Max",
+                budget: 150,
+                cost: 4513.28,
+                conversions: 49.86,
+                convRate: 5.46,
+                costPerConv: 90.52,
+                changeConversions: -31.78
+            },
+            {
+                name: "ATX | Four Points | Search | Max Clicks",
+                location: "Austin",
+                type: "Search",
+                budget: 25,
+                cost: 759.79,
+                conversions: 0.17,
+                convRate: 0.09,
+                costPerConv: 4600.3,
+                changeConversions: -94.49
+            },
+            {
+                name: "ATX | East MLK | Leads | Performance Max",
+                location: "Austin",
+                type: "Performance Max",
+                budget: 125,
+                cost: 3800.32,
+                conversions: 48.83,
+                convRate: 4.99,
+                costPerConv: 77.82,
+                changeConversions: -21.23
+            },
+            {
+                name: "ATX | East MLK | Leads | Search",
+                location: "Austin",
+                type: "Search",
+                budget: 100,
+                cost: 3036.8,
+                conversions: 8,
+                convRate: 2.85,
+                costPerConv: 379.6,
+                changeConversions: -38.46
+            }
+        ];
+
+        // Chart configurations
+        Chart.defaults.color = '#a8a8b8';
+        Chart.defaults.borderColor = '#2d2d4a';
+        Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
+
+        // Location Performance Chart
+        const locationCtx = document.getElementById('locationChart').getContext('2d');
+        const locationChart = new Chart(locationCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Houston', 'Austin'],
+                datasets: [
+                    {
+                        label: 'May 2025 Conversions',
+                        data: [
+                            campaignData.filter(c => c.location === 'Houston').reduce((sum, c) => sum + c.conversions, 0),
+                            campaignData.filter(c => c.location === 'Austin').reduce((sum, c) => sum + c.conversions, 0)
+                        ],
+                        backgroundColor: '#5865f2',
+                        borderRadius: 8
+                    },
+                    {
+                        label: 'May 2025 Cost ($)',
+                        data: [
+                            campaignData.filter(c => c.location === 'Houston').reduce((sum, c) => sum + c.cost, 0) / 100,
+                            campaignData.filter(c => c.location === 'Austin').reduce((sum, c) => sum + c.cost, 0) / 100
+                        ],
+                        backgroundColor: '#7289da',
+                        borderRadius: 8,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            padding: 20,
+                            font: {
+                                size: 14
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: '#1a1a2e',
+                        titleColor: '#ffffff',
+                        bodyColor: '#e1e1e1',
+                        borderColor: '#5865f2',
+                        borderWidth: 1,
+                        padding: 12,
+                        cornerRadius: 8
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Conversions'
+                        },
+                        grid: {
+                            color: '#2d2d4a'
+                        }
+                    },
+                    y1: {
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Cost ($100s)'
+                        },
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // Conversion Performance Chart
+        const conversionCtx = document.getElementById('conversionChart').getContext('2d');
+        const conversionChart = new Chart(conversionCtx, {
+            type: 'line',
+            data: {
+                labels: campaignData.map(c => c.name.split(' | ')[1]),
+                datasets: [
+                    {
+                        label: 'Conversion Rate (%)',
+                        data: campaignData.map(c => c.convRate),
+                        borderColor: '#5865f2',
+                        backgroundColor: 'rgba(88, 101, 242, 0.1)',
+                        tension: 0.4,
+                        pointRadius: 6,
+                        pointHoverRadius: 8,
+                        pointBackgroundColor: '#5865f2',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2
+                    },
+                    {
+                        label: 'Cost per Conversion ($)',
+                        data: campaignData.map(c => Math.min(c.costPerConv, 500)),
+                        borderColor: '#ed4245',
+                        backgroundColor: 'rgba(237, 66, 69, 0.1)',
+                        tension: 0.4,
+                        pointRadius: 6,
+                        pointHoverRadius: 8,
+                        pointBackgroundColor: '#ed4245',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            padding: 20,
+                            font: {
+                                size: 14
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: '#1a1a2e',
+                        titleColor: '#ffffff',
+                        bodyColor: '#e1e1e1',
+                        borderColor: '#5865f2',
+                        borderWidth: 1,
+                        padding: 12,
+                        cornerRadius: 8
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Conversion Rate (%)'
+                        },
+                        grid: {
+                            color: '#2d2d4a'
+                        }
+                    },
+                    y1: {
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Cost per Conversion ($)'
+                        },
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // Populate campaign table
+        function populateCampaignTable(filteredData = campaignData) {
+            const tableBody = document.getElementById('campaignTableBody');
+            tableBody.innerHTML = '';
+            
+            filteredData.forEach(campaign => {
+                const row = document.createElement('tr');
+                
+                // Determine performance badge
+                let badgeClass = 'badge-critical';
+                let badgeText = 'Needs Review';
+                
+                if (campaign.changeConversions > 50) {
+                    badgeClass = 'badge-excellent';
+                    badgeText = 'Excellent';
+                } else if (campaign.changeConversions > -30) {
+                    badgeClass = 'badge-warning';
+                    badgeText = 'Monitor';
+                }
+                
+                row.innerHTML = `
+                    <td class="campaign-name">${campaign.name}</td>
+                    <td>$${campaign.budget}</td>
+                    <td>$${campaign.cost.toFixed(2)}</td>
+                    <td>${campaign.conversions.toFixed(2)}</td>
+                    <td>${campaign.convRate.toFixed(2)}%</td>
+                    <td>$${campaign.costPerConv.toFixed(2)}</td>
+                    <td><span class="performance-badge ${badgeClass}">${badgeText}</span></td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Filter campaigns
+        function filterCampaigns(filter) {
+            // Update button states
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            let filteredData = campaignData;
+            
+            switch(filter) {
+                case 'search':
+                    filteredData = campaignData.filter(c => c.type === 'Search');
+                    break;
+                case 'pmax':
+                    filteredData = campaignData.filter(c => c.type === 'Performance Max');
+                    break;
+                case 'houston':
+                    filteredData = campaignData.filter(c => c.location === 'Houston');
+                    break;
+                case 'austin':
+                    filteredData = campaignData.filter(c => c.location === 'Austin');
+                    break;
+            }
+            
+            populateCampaignTable(filteredData);
+        }
+
+        // Initialize table
+        populateCampaignTable();
+
+        // Add smooth scrolling
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>
